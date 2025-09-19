@@ -1,7 +1,7 @@
 name: Notify Discord on push
 
 on:
-  push:  # run on any branch; change if you want
+  push:  # run on any branch; change if you wantg
 jobs:
   notify:
     runs-on: ubuntu-latest
