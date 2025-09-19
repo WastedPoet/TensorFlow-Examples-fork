@@ -16,6 +16,16 @@ jobs:
           # Use \n inside the string; jq will escape correctly
           echo "MSG=✅ Push to **${REPO}** on **${BRANCH}** by **${ACTOR}**\n${URL}" >> $GITHUB_ENV
 
+      # 🔎 DEBUG STEP (insert here)
+      - name: Minimal test to Discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          echo "Testing webhook with a simple message..."
+          curl -i -H "Content-Type: application/json" \
+               -d '{"content":"Hello from GitHub Actions 👋"}' \
+               "$DISCORD_WEBHOOK"
+
       - name: Send to Discord
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
