@@ -1,27 +1,29 @@
 name: Notify Discord on push
 
 on:
-  push:
-    branches: [ "main" ]  # change if your branch is master or something else
-
+  push:  # run on any branch; change if you want
 jobs:
   notify:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Build message
-        id: msg
+      - name: Compose message
+        id: compose
         run: |
           REPO="${{ github.repository }}"
           BRANCH="${{ github.ref_name }}"
-          COMMITS_URL="https://github.com/${REPO}/commits/${BRANCH}"
-          TEXT="✅ Push to **${REPO}** on **${BRANCH}** by **${{ github.actor }}**\n${COMMITS_URL}"
-          echo "content=$TEXT" >> $GITHUB_OUTPUT
+          ACTOR="${{ github.actor }}"
+          URL="https://github.com/${REPO}/commits/${BRANCH}"
+          # Use \n inside the string; jq will escape correctly
+          echo "MSG=✅ Push to **${REPO}** on **${BRANCH}** by **${ACTOR}**\n${URL}" >> $GITHUB_ENV
 
       - name: Send to Discord
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          MSG: ${{ env.MSG }}
         run: |
-          curl -H "Content-Type: application/json" \
-               -d "{\"content\": \"${{ steps.msg.outputs.content }}\"}" \
+          # Build valid JSON safely
+          payload=$(jq -nc --arg content "$MSG" '{content:$content}')
+          # Send and show status + any error body for debugging
+          curl -sS -i -H "Content-Type: application/json" \
+               -d "$payload" \
                "$DISCORD_WEBHOOK"
