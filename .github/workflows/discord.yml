@@ -1,0 +1,27 @@
+name: Notify Discord on push
+
+on:
+  push:
+    branches: [ "main" ]  # change if your branch is master or something else
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Build message
+        id: msg
+        run: |
+          REPO="${{ github.repository }}"
+          BRANCH="${{ github.ref_name }}"
+          COMMITS_URL="https://github.com/${REPO}/commits/${BRANCH}"
+          TEXT="✅ Push to **${REPO}** on **${BRANCH}** by **${{ github.actor }}**\n${COMMITS_URL}"
+          echo "content=$TEXT" >> $GITHUB_OUTPUT
+
+      - name: Send to Discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\": \"${{ steps.msg.outputs.content }}\"}" \
+               "$DISCORD_WEBHOOK"
